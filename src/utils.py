@@ -5,6 +5,10 @@ import pandas as pd
 from src.exception import CustomException
 import dill
 from sklearn.metrics import r2_score
+from sklearn.model_selection import RandomizedSearchCV
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 def save_object(file_path, obj):
@@ -20,22 +24,29 @@ def save_object(file_path, obj):
         raise CustomException(e, sys)
 
 
-def evaluate_model(X_train, y_train, X_test, y_test, models):
+def evaluate_model(X_train, y_train, X_test, y_test, models, params):
 
     try:
         report = {}
 
         for i in range(len(list(models))):
             model = list(models.values())[i]
+            parameters = params[list(models.keys())[i]]
+
+            rs = RandomizedSearchCV(model, parameters,
+                                    verbose=False, n_iter=3)
+            rs.fit(X_train, y_train)
+
+            model.set_params(**rs.best_params_)
             model.fit(X_train, y_train)
 
             y_train_pred = model.predict(X_train)
             y_test_pred = model.predict(X_test)
 
-            train_score = r2_score(y_train_pred, y_train)
-            test_score = r2_score(y_test_pred, y_test)
+            train_model_score = r2_score(y_train, y_train_pred)
+            test_model_score = r2_score(y_test, y_test_pred)
 
-            report[list(models.keys())[i]] = test_score
+            report[list(models.keys())[i]] = test_model_score
 
         return report
 
