@@ -21,7 +21,7 @@ def get_predict(request: Request):
 @app.post("/predictdata")
 async def predict_datapoint(request: Request):
 
-    form_data = dict(await request._get_form())
+    form_data = dict(await request.form())
 
     data = CustomData(
         gender=form_data["gender"],
